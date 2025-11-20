@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode } from 'react';
 import type { UserFormUser } from 'src/types/UserFormUser.ts';
 import { UserFormContext } from 'src/components/UserFormComponent/UserFormContext.ts';
 import UserFormEmailInput from 'src/components/UserFormComponent/components/UserFormEmailInput.tsx';
@@ -6,10 +6,10 @@ import UserFormHeader from 'src/components/UserFormComponent/components/UserForm
 import UserFormPasswordInput from 'src/components/UserFormComponent/components/UserFormPasswordInput.tsx';
 import UserFormFormBody from 'src/components/UserFormComponent/components/UserFormFormBody.tsx';
 import UserFormSubmitButton from 'src/components/UserFormComponent/components/UserFormSubmitButton.tsx';
-import { useMutation } from '@tanstack/react-query';
 import UserFormFooter from 'src/components/UserFormComponent/components/UserFormFooter.tsx';
 import UserFormPasswordRepeatInput from 'src/components/UserFormComponent/components/UserFormPasswordRepeatInput.tsx';
 import UserFormDateOfBirthInput from 'src/components/UserFormComponent/components/UserFormDateOfBirthInput.tsx';
+import useUserFormComponent from 'src/components/UserFormComponent/UserFormComponent.hooks.tsx';
 
 interface LoginComponentProps {
     submitCallback?: (user: Partial<UserFormUser>) => Promise<void> | void;
@@ -17,52 +17,18 @@ interface LoginComponentProps {
 }
 
 const UserFormComponent = (props: LoginComponentProps) => {
-    const [user, setUser] = useState<Partial<UserFormUser>>({});
-    const [invalidFields, setInvalidFields] = useState<(keyof UserFormUser)[]>(
-        []
-    );
-    const [unreadyFields, setUnreadyFields] = useState<(keyof UserFormUser)[]>(
-        []
-    );
-    const isSubmittable = !unreadyFields.length && !invalidFields.length;
-
-    const setUserAttribute = (key: keyof UserFormUser, value: string) => {
-        setUser({ ...user, [key]: value });
-    };
-
-    const submitCallback = async () => {
-        if (!isSubmittable) {
-            return;
-        }
-        if (props.submitCallback) {
-            await props.submitCallback(user);
-        }
-    };
-
-    const { mutate, isPending, isError } = useMutation({
-        mutationFn: submitCallback,
-    });
-    const validatedSubmitCallback = () => (!isPending ? mutate() : undefined);
-
-    const setFieldInvalid = (field: keyof UserFormUser, isInvalid: boolean) => {
-        setInvalidFields((prev) => {
-            if (isInvalid) {
-                return [...prev, field];
-            } else {
-                return prev.filter((f) => f !== field);
-            }
-        });
-    };
-
-    const setFieldUnready = (field: keyof UserFormUser, isUnready: boolean) => {
-        setUnreadyFields((prev) => {
-            if (isUnready) {
-                return [...prev, field];
-            } else {
-                return prev.filter((f) => f !== field);
-            }
-        });
-    };
+    const {
+        user,
+        invalidFields,
+        setFieldInvalid,
+        setFieldUnready,
+        isSubmittable,
+        isError,
+        setUserAttribute,
+        unreadyFields,
+        validatedSubmitCallback,
+        isPending,
+    } = useUserFormComponent(props.submitCallback);
 
     return (
         <div
